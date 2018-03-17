@@ -114,10 +114,10 @@ def extract_features(feature_names, data):
             #fea = fea.join(data[name])
             fea = fea.join(data[name].apply(math.fabs))
         else:
-            #try:
+            try:
                 fea = fea.join(getattr(features, camel_to_underscores(name))(data))
-            #except TypeError:
-            #    pass
+            except TypeError:
+                pass
     return fea
 
 if __name__=="__main__":

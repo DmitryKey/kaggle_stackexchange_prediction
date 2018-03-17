@@ -12,9 +12,9 @@ _chunk_size = 10000
 skip_fields = ['PostId', 'PostCreationDate', 'OwnerUserId', 'OwnerCreationDate', 'OwnerUndeletedAnswerCountAtPostTime', 'Title', 'BodyMarkdown', 'Tag1', 'Tag2', 'Tag3', 'Tag4', 'Tag5', 'PostClosedDate']
 question_status = ['open', 'too localized', 'not constructive', 'off topic',
 			   'not a real question']
-output_all_entries = 1
+output_all_entries = 0
 			   
-train_file = "train.csv"
+train_file = "train-sample.csv"
 output_sampled_file = "train_all_fields_"+str(cu.output_rows_limit)+".csv" #"train_no_markdown_no_title_"+str(cu.output_rows_limit)+".csv"
 if output_all_entries == 1:
 	output_sampled_file = "train_no_markdown_only_reputation_all.csv"
@@ -35,7 +35,7 @@ def sample():
 def sample_by_class(writer,class_name,read_num=-1):
 	i = 0
 	print "reading class:" + class_name
-	for q in iter_questions("data/" + filename_in,class_name):
+	for q in iter_questions(cu.data_path + filename_in,class_name):
 		if (i % _chunk_size == 0):
 			print str(i)
 		if i == read_num:
@@ -56,7 +56,7 @@ if __name__=="__main__":
 	start = time.time()
 	
 	filename_in = train_file
-	filename_out = os.path.join(main_path, "data", output_sampled_file)
+	filename_out = os.path.join(main_path, cu.data_path, output_sampled_file)
 	
 	writer = csv.writer(open(filename_out, "w"), lineterminator="\n")
 	writer.writerow(cu.get_header(filename_in))

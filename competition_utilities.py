@@ -7,10 +7,10 @@ import os
 import pandas as pd
 import re
 
-base = "d:\\Projects\\other_projects\\machine_learning\\stackexchange_closed_q"
+base = "./data"
 
-data_path = base + "\\data"
-submissions_path = base + "\\submission"
+data_path = base + "/train/"
+submissions_path = base + "/submission/"
 
 if not data_path or not submissions_path:
     raise Exception("Set the data and submission paths in competition_utilities.py!")

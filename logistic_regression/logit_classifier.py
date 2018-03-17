@@ -1,12 +1,15 @@
+from __future__ import print_function
 from sklearn.linear_model import LogisticRegression
 import competition_utilities as cu
-import pandas as pd
-import numpy as np
 import features
 import time
-import sys
 from sklearn.cross_validation import KFold
 import eval
+
+# Control parameters
+do_cross_validation = 1
+all_fields_present = 1
+is_full_train_set = 0
 
 feature_names = [ "BodyLength",
                   #"ppl",
@@ -20,21 +23,18 @@ feature_names = [ "BodyLength",
                 #"BusinessTag"
                 ]
 
-                
+
 # order of elements is very important for the output
 ques_status = ['not a real question','not constructive','off topic','open','too localized']
 
-# old stuff
-#train_file = "train_no_markdown_no_title_"+str(cu.output_rows_limit)+".csv"
 full_train_file = "train.csv"
 #test_file = "public_leaderboard.csv"
 
-do_cross_validation = 1
-all_fields_present = 1
-is_full_train_set  = 0
 
 # Markdown and title omitted
 train_file = "train_no_markdown_no_title_"+str(cu.output_rows_limit)+".csv"
+
+
 # all fields present
 if all_fields_present == 1:
     train_file = "train_all_fields_"+str(cu.output_rows_limit)+".csv"
@@ -62,7 +62,7 @@ def main():
         y = []        
         
         for train_data in data_iter:
-            print "About to have processed: " + str(i)
+            print("About to process data items: " + str(i))
             print("Extracting features")
             if fea is None:
                 fea = features.extract_features(feature_names, train_data)
@@ -74,10 +74,10 @@ def main():
         
             i = i + _chunksize
     else:
-        print "Reading train data and its features from: " + train_file
+        print ("Reading train data and its features from: ", train_file)
         data = cu.get_dataframe(train_file)
         fea = features.extract_features(feature_names,data)
-        print "Collecting statuses"
+        print ("Collecting statuses")
         y = []
         for element in data["OpenStatus"]:
                 for index, status in enumerate(ques_status):
@@ -88,7 +88,7 @@ def main():
         logit = LogisticRegression(penalty='l2', dual=False, C=1.0, class_weight=None,
                                        fit_intercept=True, intercept_scaling=1, tol=0.0001)
 
-        print 'starting 10 fold verification'
+        print ("starting 10 fold verification")
         # Dividing the dataset into k = 10 folds for cross validation
         kf = KFold(len(y),k = 10)
         fold = 0
@@ -122,14 +122,14 @@ def main():
                         temp.append(fea[feature_name][i])
                 X_test.append(temp)
                 y_test.append(y[i])
-            
-            print "fitting this fold's data"
-            
-            rf.fit(X_train, y_train)
+
+            print ("fitting this fold's data")
+
+            kf.fit(X_train, y_train)
             y_test = vectorize_actual(y_test)
             
             #_pred_probs = denormalize(rf.predict_proba(X_test))
-            _pred_probs = rf.predict_proba(X_test)
+            _pred_probs = kf.predict_proba(X_test)
             
             print("Calculating priors and updating posteriors")
             #new_priors = cu.get_priors(full_train_file)
@@ -139,21 +139,21 @@ def main():
             # evaluating the performance
             result = eval.mcllfun(y_test,_pred_probs)
             result_sum += result
-            print "MCLL score for fold %d = %0.11f" % (fold,result)
-            
-        print "Average MCLL score for this classifier = %0.11f" % (result_sum/10)     
+            print ("MCLL score for fold %d = %0.11f" % (fold, result))
+
+        print ("Average MCLL score for this classifier = %0.11f" % (result_sum / 10))
     else:
         logit = LogisticRegression(penalty='l2', dual=False, C=1.0, class_weight=None,
                                        fit_intercept=True, intercept_scaling=1, tol=0.0001) # not available: compute_importances=True
 
-        print "Fitting"
+        print ("Fitting")
         logit.fit(fea, y)
-        
-        print "Reading test data and features"
+
+        print ("Reading test data and features")
         test_data = cu.get_dataframe(test_file)
         test_fea = features.extract_features(feature_names,test_data)
 
-        print "Making predictions"
+        print("Making predictions")
         global probs
         probs = logit.predict_proba(test_fea)
         
@@ -164,11 +164,11 @@ def main():
             old_priors = cu.get_priors(train_file)
             probs = cu.cap_and_update_priors(old_priors, probs, new_priors, 0.001)    
 
-        print "writing submission to " + submission_file
+        print("writing submission to ", submission_file)
         cu.write_submission(submission_file, probs)
 
     finish = time.time()
-    print "completed in %0.4f seconds" % (finish-start)
+    print("completed in %0.4f seconds" % (finish-start))
 
 def vectorize_actual(y):
     act = []
@@ -178,5 +178,8 @@ def vectorize_actual(y):
         act.append(temp)
     return act
     
+def run_classifier():
+    main()
+
 if __name__ =="__main__":
     main()

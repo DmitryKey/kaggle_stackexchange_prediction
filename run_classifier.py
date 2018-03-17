@@ -1,0 +1,3 @@
+from logistic_regression.logit_classifier import run_classifier
+
+run_classifier()

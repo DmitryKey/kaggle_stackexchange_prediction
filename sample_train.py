@@ -1,5 +1,4 @@
 import competition_utilities as cu
-import csv
 import os
 import random
 
